@@ -20,7 +20,7 @@
             owner = "pythops";
             repo = "oryx";
             rev = "v${version}";
-            hash = "sha256-dnsQLKsvVuteNuGx1FLkv8F8dLDePFO32NfSEja+fhA=";
+            hash = "sha26-dnsQLKsvVuteNuGx1FLkv8F8dLDePFO32NfSEja+fhA=";
           };
 
           cargoSha256 = "sha256-0000000000000000000000000000000000000000000000000000";
@@ -50,6 +50,6 @@
           packages = [ pkgs.rust-analyzer ];
         };
 
-        formatter = pkgs.nixpkgs-fmt;
+        # formatter = pkgs.nixpkgs-fmt; # <-- TEMPORARILY COMMENTED OUT
       });
 }
