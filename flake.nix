@@ -6,16 +6,15 @@
     flakelight.url = "github:nix-community/flakelight";
   };
 
-  # The entire `outputs` attribute is assigned to the result of `mkFlake`.
-  # The `inputs` argument provides access to `nixpkgs`, `self`, etc.
-  outputs = inputs:
-    inputs.flakelight.lib.mkFlake {
+  # --- CORRECTED STRUCTURE ---
+  # This pattern explicitly destructures the inputs and makes them available
+  # to the mkFlake function in the way it expects.
+  outputs = { flakelight, ... }@inputs:
+    flakelight.lib.mkFlake {
       # 1. Pass the necessary inputs to flakelight.
-      # It needs `nixpkgs` to find packages and `self` to reference outputs.
-      inherit (inputs) nixpkgs self;
+      inherit (inputs) self nixpkgs;
 
       # 2. Define the 'oryx' package.
-      # flakelight provides `pkgs` automatically.
       oryx = { pkgs, ... }: pkgs.rustPlatform.buildRustPackage rec {
         pname = "oryx";
         version = "0.6.1";
