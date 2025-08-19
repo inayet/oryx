@@ -28,8 +28,8 @@
         };
 
         # Add this line to skip the unpack phase
-        dontUnpack = false;
-        dontBuild = true;
+        dontUnpack = true;
+        dontBuild = false;
         # Installation phase
         installPhase = ''
           mkdir -p $out/bin
