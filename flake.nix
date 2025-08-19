@@ -10,8 +10,8 @@
   # Define flake outputs
   outputs =
     {
-      self,
       nixpkgs,
+      ...
     }:
     {
       # Define a package for the default system (x86_64-linux)
