@@ -9,7 +9,7 @@
   # --- CORRECTED LINE ---
   # `outputs` is now assigned directly to `mkFlake`.
   # flakelight handles creating the function that receives the inputs.
-  outputs = {flakelight,nixpkgs,...}:
+  outputs =inputs@ {flakelight,nixpkgs,...}:
    flakelight.lib.mkFlake {
     # 1. Tell flakelight where to get packages for each system
     # `nixpkgs` is an input and is automatically available here.
