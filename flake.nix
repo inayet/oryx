@@ -8,8 +8,6 @@
 
   outputs = inputs@{ self, flakelight, ... }:
     flakelight ./. ({ lib, pkgs, ... }:
-      # Use a `let` binding to define the package derivation as a function of `pkgs`.
-      # This makes it reusable and avoids scoping issues.
       let
         oryx-pkg = pkgs: pkgs.rustPlatform.buildRustPackage rec {
           pname = "oryx";
@@ -19,17 +17,15 @@
             owner = "pythops";
             repo = "oryx";
             rev = "v${version}";
-            # NOTE: This is a placeholder. The build will fail and give you the correct hash.
-            hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+            # STEP 1: Nix will tell you what to paste here.
+            hash = "";
           };
 
-          # ---> THIS IS THE HASH YOU WILL NEED TO REPLACE <---
-          # The build will fail and tell you the correct hash for your dependencies.
-          cargoSha256 = "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=";
+          # STEP 2: After fixing the hash above, Nix will tell you what to paste here.
+          cargoSha256 = "";
 
           nativeBuildInputs = [ pkgs.pkg-config ];
           buildInputs = [ pkgs.libpcap ];
-
           doCheck = true;
 
           meta = with pkgs.lib; {
@@ -47,10 +43,7 @@
           default = oryx-pkg;
         };
 
-        # FIX: The devShell definition for this version of flakelight
-        # is a function that takes `pkgs` as an argument.
         devShells.default = pkgs: {
-          # We get the build inputs by calling our package function with `pkgs`.
           inputsFrom = [ (oryx-pkg pkgs) ];
           packages = [ pkgs.rust-analyzer ];
         };
