@@ -25,6 +25,8 @@
           sha256 = "sha256-R6M43qLjiMFDgseGQrIGzTsdWO/wqt1/bgIFMGS+yTc=";
         };
 
+        dontUnpack = true;
+
         # Installation phase
         installPhase = ''
           mkdir -p $out/bin
