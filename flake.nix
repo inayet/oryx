@@ -28,7 +28,7 @@
         };
 
         # Add this line to skip the unpack phase
-        dontUnpack = true;
+        dontUnpack = false;
         dontBuild = true;
         # Installation phase
         installPhase = ''
