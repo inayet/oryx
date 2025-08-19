@@ -7,12 +7,12 @@
   };
 
   # --- CORRECTED STRUCTURE ---
-  # This pattern explicitly destructures the inputs and makes them available
-  # to the mkFlake function in the way it expects.
-  outputs = { flakelight, ... }@inputs:
+  # This more explicit function signature is a robust way to ensure
+  # all inputs are correctly passed and in scope.
+  outputs = { self, nixpkgs, flakelight, ... }:
     flakelight.lib.mkFlake {
       # 1. Pass the necessary inputs to flakelight.
-      inherit (inputs) self nixpkgs;
+      inherit self nixpkgs;
 
       # 2. Define the 'oryx' package.
       oryx = { pkgs, ... }: pkgs.rustPlatform.buildRustPackage rec {
