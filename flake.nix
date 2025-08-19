@@ -1,67 +1,51 @@
 {
-  description = "A flake for packaging ORYX";
+  description = "A flake for building ORYX from source";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # To lock to a specific version for full reproducibility, run:
-    # nix flake lock --update-input nixpkgs
+    # A community helper for making flakes cleaner and multi-platform
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs }:
-    let
-      # 1. List of systems you want to support.
-      # Add more if binaries for them are available.
-      supportedSystems = [ "x86_64-linux" ];
+  outputs = { self, nixpkgs, flake-utils }:
+    # Use the helper to generate outputs for common systems (x86_64-linux, etc.)
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
+        # The package is now available as `nix build .#oryx` or just `nix build`
+        packages.oryx = pkgs.rustPlatform.buildRustPackage rec {
+          pname = "oryx";
+          version = "0.6.1";
 
-      # 2. Helper function to generate outputs for each system.
-      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-
-      # 3. Generate the package set for each supported system.
-      oryxPackages = forAllSystems (system:
-        let
-          # Use the nixpkgs for the specific system being iterated over.
-          pkgs = nixpkgs.legacyPackages.${system};
-        in
-        {
-          # The package is now accessible as `oryx.packages.<system>.default`
-          default = pkgs.stdenv.mkDerivation rec {
-            pname = "oryx";
-            version = "0.6.1";
-
-            # Note: This binary is specific to x86_64-linux.
-            # If you supported more systems, you'd need logic here
-            # to fetch the correct binary for each `system`.
-            src = pkgs.fetchurl {
-              url = "https://github.com/pythops/oryx/releases/download/v${version}/oryx-x86_64-unknown-linux-musl";
-              sha256 = "sha256-R6M43qLjiMFDgseGQrIGzTsdWO/wqt1/bgIFMGS+yTc=";
-            };
-
-            dontUnpack = true;
-
-            installPhase = ''
-              runHook preInstall
-              mkdir -p $out/bin
-              cp $src $out/bin/oryx
-              chmod +x $out/bin/oryx
-              runHook postInstall
-            '';
-
-            meta = with pkgs.lib; {
-              description = "A TUI for sniffing network traffic";
-              homepage = "https://github.com/pythops/oryx";
-              license = licenses.mit;
-              # The `platforms` attribute now reflects the supported systems.
-              platforms = platforms.linux;
-              maintainers = with maintainers; [ ]; # Good practice to add your handle
-            };
+          # Fetches the source code directly from the GitHub release tag
+          src = pkgs.fetchFromGitHub {
+            owner = "pythops";
+            repo = "oryx";
+            rev = "v${version}";
+            # This is a placeholder hash. We will get the correct one in the steps below.
+            hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
           };
-        });
-    in
-    {
-      # Expose the packages under `packages.<system>.*`
-      packages = oryxPackages;
 
-      # Add a defaultPackage for convenience, so `nix build` works out-of-the-box.
-      defaultPackage = forAllSystems (system: self.packages.${system}.default);
-    };
+          # This hash ensures the Rust dependencies are exactly the same.
+          # It's also a placeholder we will fix.
+          cargoSha256 = "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=";
+
+          # Oryx needs these system libraries to build and run
+          nativeBuildInputs = [ pkgs.pkg-config ];
+          buildInputs = [ pkgs.libpcap ];
+
+          meta = with pkgs.lib; {
+            description = "A TUI for sniffing network traffic";
+            homepage = "https://github.com/pythops/oryx";
+            license = licenses.mit;
+            platforms = platforms.linux; # This is now managed by flake-utils
+            maintainers = [ ]; # You can add your GitHub handle here
+          };
+        };
+
+        # Set our `oryx` package as the default for `nix build` and `nix run`
+        packages.default = self.packages.${system}.oryx;
+      });
 }
