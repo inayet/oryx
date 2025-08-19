@@ -18,7 +18,7 @@
             repo = "oryx";
             rev = "v${version}";
             # STEP 1: Nix will tell you what to paste here.
-            hash = "";
+            hash = "sha256-dnsQLKsvVuteNuGx1FLkv8F8dLDePFO32NfSEja+fhA=";
           };
 
           # STEP 2: After fixing the hash above, Nix will tell you what to paste here.
