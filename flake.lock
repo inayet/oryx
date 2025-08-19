@@ -15,7 +15,6 @@
       "original": {
         "owner": "nix-community",
         "repo": "flakelight",
-        "rev": "06521a6725f85db6467c398651e49ba8238cb6e0",
         "type": "github"
       }
     },
