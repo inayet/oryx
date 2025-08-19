@@ -7,9 +7,9 @@
   };
 
   outputs = inputs@{ self, flakelight, ... }:
-    flakelight ./. ({ lib, pkgs, self', ... }:
-      # Use a `let` binding to define the package derivation once.
-      # This avoids code duplication and the circular reference that caused the error.
+    flakelight ./. ({ lib, pkgs, ... }:
+      # Use a `let` binding to define the package derivation as a function of `pkgs`.
+      # This makes it reusable and avoids scoping issues.
       let
         oryx-pkg = pkgs: pkgs.rustPlatform.buildRustPackage rec {
           pname = "oryx";
@@ -19,13 +19,12 @@
             owner = "pythops";
             repo = "oryx";
             rev = "v${version}";
-            # NOTE: This is a placeholder hash. The first time you build,
-            # Nix will fail and tell you the correct hash to put here.
+            # NOTE: This is a placeholder. The build will fail and give you the correct hash.
             hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
           };
 
-          # NOTE: This is also a placeholder. The build will fail and provide
-          # the correct hash for you to copy here.
+          # ---> THIS IS THE HASH YOU WILL NEED TO REPLACE <---
+          # The build will fail and tell you the correct hash for your dependencies.
           cargoSha256 = "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=";
 
           nativeBuildInputs = [ pkgs.pkg-config ];
@@ -43,20 +42,16 @@
         };
       in
       {
-        # The `packages` set contains all your defined packages.
         packages = {
-          # The main package, using the derivation from the `let` block.
           oryx = oryx-pkg;
-
-          # The `default` package is a special name used by `nix build`.
-          # By assigning the same derivation here, we make it the default.
           default = oryx-pkg;
         };
 
-        # The dev shell can refer to the final package output.
-        # `self'` here is correctly scoped and refers to the final flake outputs.
-        devShells.default = { self', pkgs, ... }: pkgs.mkShell {
-          inputsFrom = [ self'.packages.oryx ];
+        # FIX: The devShell definition for this version of flakelight
+        # is a function that takes `pkgs` as an argument.
+        devShells.default = pkgs: {
+          # We get the build inputs by calling our package function with `pkgs`.
+          inputsFrom = [ (oryx-pkg pkgs) ];
           packages = [ pkgs.rust-analyzer ];
         };
 
