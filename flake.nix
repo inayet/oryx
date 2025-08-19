@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flakelight.url = "github:nix-community/flakelight/06521a6725f85db6467c398651e49ba8238cb6e0";
+    flakelight.url = "github:nix-community/flakelight";
   };
 
   outputs = inputs@{ self, flakelight, ... }:
