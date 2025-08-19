@@ -3,21 +3,15 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # Pinning to a specific commit to ensure API stability.
-    # You can remove the `rev` and `narHash` to go back to the latest.
     flakelight.url = "github:nix-community/flakelight/06521a6725f85db6467c398651e49ba8238cb6e0";
   };
 
-  # This is the correct invocation pattern for this version of flakelight,
-  # as seen in its README.md file. It uses flakelight as a functor.
-  # The `./.` is a special attribute on the flakelight output that acts as the entrypoint.
   outputs = inputs@{ self, flakelight, ... }:
-    flakelight ./. ({ lib, pkgs, self', ... }: {
-
-      # 1. Define all packages under the `packages` attribute set.
-      packages = {
-        # The package definition is now a function that takes `pkgs` as an argument.
-        oryx = pkgs: pkgs.rustPlatform.buildRustPackage rec {
+    flakelight ./. ({ lib, pkgs, self', ... }:
+      # Use a `let` binding to define the package derivation once.
+      # This avoids code duplication and the circular reference that caused the error.
+      let
+        oryx-pkg = pkgs: pkgs.rustPlatform.buildRustPackage rec {
           pname = "oryx";
           version = "0.6.1";
 
@@ -39,30 +33,33 @@
 
           doCheck = true;
 
-          meta = with pkgs.lib; { # Use `pkgs.lib` provided by the functor
+          meta = with pkgs.lib; {
             description = "A TUI for sniffing network traffic";
             homepage = "https://github.com/pythops/oryx";
             license = licenses.mit;
             platforms = platforms.linux;
-            maintainers = with maintainers; [ ]; # Add your GitHub handle here
+            maintainers = with maintainers; [ ];
           };
         };
+      in
+      {
+        # The `packages` set contains all your defined packages.
+        packages = {
+          # The main package, using the derivation from the `let` block.
+          oryx = oryx-pkg;
 
-        # 2. The default package is a function of `self'`.
-        # `self'` refers to the final set of packages for the current system.
-        default = self': self'.packages.oryx;
-      };
+          # The `default` package is a special name used by `nix build`.
+          # By assigning the same derivation here, we make it the default.
+          default = oryx-pkg;
+        };
 
-      # 3. Define the development shell.
-      # This is a function that takes the final package set (`self'`) and `pkgs`.
-      devShells.default = { self', pkgs, ... }: pkgs.mkShell {
-        # `inputsFrom` allows the shell to reuse all the build dependencies.
-        inputsFrom = [ self'.packages.oryx ];
-        # Add any extra development tools here.
-        packages = [ pkgs.rust-analyzer ];
-      };
+        # The dev shell can refer to the final package output.
+        # `self'` here is correctly scoped and refers to the final flake outputs.
+        devShells.default = { self', pkgs, ... }: pkgs.mkShell {
+          inputsFrom = [ self'.packages.oryx ];
+          packages = [ pkgs.rust-analyzer ];
+        };
 
-      # 4. Define the formatter. This is a function that takes `pkgs`.
-      formatter = pkgs: pkgs.nixpkgs-fmt;
-    });
+        formatter = pkgs: pkgs.nixpkgs-fmt;
+      });
 }
