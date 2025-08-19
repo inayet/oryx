@@ -18,8 +18,6 @@
       packages.x86_64-linux.default = nixpkgs.legacyPackages.x86_64-linux.stdenv.mkDerivation rec {
         pname = "oryx";
         version = "0.6.1";
-
-        # Download the pre-built ORYX binary from the GitHub release
         src = nixpkgs.legacyPackages.x86_64-linux.fetchurl {
           url = "https://github.com/pythops/oryx/releases/download/v${version}/oryx-x86_64-unknown-linux-musl";
           # You MUST replace the following with the actual SHA256 hash of the binary file
@@ -28,8 +26,8 @@
         };
 
         # Add this line to skip the unpack phase
-        dontUnpack = true;
-        dontBuild = false;
+        dontUnpack = false;
+        dontBuild = true;
         # Installation phase
         installPhase = ''
           mkdir -p $out/bin
