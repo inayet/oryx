@@ -7,7 +7,8 @@
   };
 
   outputs = { self, nixpkgs, flakelight }:
-    flakelight.lib.simpleFlake {
+    # The correct function is `mkFlake`, not `simpleFlake`.
+    flakelight.lib.mkFlake {
       # 1. Tell flakelight where to get packages for each system
       pkgs = nixpkgs.legacyPackages;
 
