@@ -22,7 +22,7 @@
         url = "https://github.com/pythops/oryx/releases/download/v${version}/oryx-x86_64-unknown-linux-musl";
         # You MUST replace the following with the actual SHA256 hash of the binary file
         # To get the SHA256 hash, download the file and run `sha256sum oryx-x86_64-unknown-linux-musl`
-        sha256 = "sha256-0dy9prj30182drzxvaphxxc1sfyd0sr451n7h91w3273lbg3i8s7";
+        sha256 = "";
       };
 
       # Installation phase
