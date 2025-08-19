@@ -1,51 +1,47 @@
 {
-  description = "A flake for building ORYX from source";
+  description = "A flake for building ORYX from source using flakelight";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # A community helper for making flakes cleaner and multi-platform
-    flake-utils.url = "github:numtide/flake-utils";
+    # Add the flakelight library as an input
+    flakelight.url = "github:nix-community/flakelight";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    # Use the helper to generate outputs for common systems (x86_64-linux, etc.)
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-      in
-      {
-        # The package is now available as `nix build .#oryx` or just `nix build`
-        packages.oryx = pkgs.rustPlatform.buildRustPackage rec {
-          pname = "oryx";
-          version = "0.6.1";
+  # The outputs function now uses flakelight to abstract away system logic
+  outputs = { self, nixpkgs, flakelight }:
+    flakelight.lib.simpleFlake {
+      # 1. Tell flakelight where to get packages for each system
+      pkgs = nixpkgs.legacyPackages;
 
-          # Fetches the source code directly from the GitHub release tag
-          src = pkgs.fetchFromGitHub {
-            owner = "pythops";
-            repo = "oryx";
-            rev = "v${version}";
-            # This is a placeholder hash. We will get the correct one in the steps below.
-            hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-          };
+      # 2. Define a package named 'oryx'
+      # flakelight will automatically build this for each default system.
+      oryx = { pkgs, ... }: pkgs.rustPlatform.buildRustPackage rec {
+        pname = "oryx";
+        version = "0.6.1";
 
-          # This hash ensures the Rust dependencies are exactly the same.
-          # It's also a placeholder we will fix.
-          cargoSha256 = "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=";
-
-          # Oryx needs these system libraries to build and run
-          nativeBuildInputs = [ pkgs.pkg-config ];
-          buildInputs = [ pkgs.libpcap ];
-
-          meta = with pkgs.lib; {
-            description = "A TUI for sniffing network traffic";
-            homepage = "https://github.com/pythops/oryx";
-            license = licenses.mit;
-            platforms = platforms.linux; # This is now managed by flake-utils
-            maintainers = [ ]; # You can add your GitHub handle here
-          };
+        src = pkgs.fetchFromGitHub {
+          owner = "pythops";
+          repo = "oryx";
+          rev = "v${version}";
+          # This is a placeholder hash. You still need to get the correct one.
+          hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
         };
 
-        # Set our `oryx` package as the default for `nix build` and `nix run`
-        packages.default = self.packages.${system}.oryx;
-      });
+        # This is also a placeholder hash you need to find.
+        cargoSha256 = "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=";
+
+        nativeBuildInputs = [ pkgs.pkg-config ];
+        buildInputs = [ pkgs.libpcap ];
+
+        meta = with pkgs.lib; {
+          description = "A TUI for sniffing network traffic";
+          homepage = "https://github.com/pythops/oryx";
+          license = licenses.mit;
+          platforms = platforms.linux;
+        };
+      };
+
+      # 3. Set the default package for `nix build` and `nix run`
+      default = self.packages.oryx;
+    };
 }
